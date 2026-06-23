@@ -1,0 +1,121 @@
+# Allgemeine Informationen
+Case-ID: DSAG_SIEM_001
+Titel: Privilege Escalation SAP ABAP
+Beschreibung_kurz: Erkennt, wenn ein Benutzer über ein auffälliges Vorgehen Berechtigungen ausweitet
+Beschreibung_lang: ...
+Status: draft # draft, im Review, Final
+Autor: Achim Kießler
+Version: 1.0
+Datum: 19.06.2026
+
+# Kategorisierung & Bedrohungs-Mapping
+Kritikalität: critical # low, medium, high, critical
+Kategorie: Privilege Escalation
+SAP_Technologie: [SAP NetWeaver ABAP, S/4HANA]
+Stage_Relevanz: [DEV,TST,PRD]
+Relevanz RISE: relevant # relevant, nicht relevant
+Compliance-Zuordnung:
+  - SOX: ...
+  - NIST: ...
+  - ISO27001:2022: ...
+Taxonomie:
+  mitre_attack:
+    Tactic: 
+      Tactic-ID: TA0004
+      Tactic-Name: Privilege Escalation
+    Technique: 
+      Technique-ID: T1548
+      Technique-Name: Abuse Elevation Control Mechanism
+  cyber_kill_chain:
+    Phase: Weaponization
+
+
+# Datenquellen & Log-Spezifikationen (zentrale Lognormalisierung ggf noch sinnvoll!)
+Logquellen:
+  - log_id: src_abap_sal
+    name: Security Audit Log (SAL)
+    required_fields: [Event_ID,...]
+    hints: die Aufzeichnung konkreter EVENT_IDs hängt von der Aktivierung und Konfiguration des ABAP SALs ab. Details siehe https://help.sap.com/docs/ABAP_PLATFORM_BW4HANA/280f016edb8049e998237fcbd80558e7/74406e80420e483fba6107bbc56718af.html. Im RISE Kontext ist zudem Hinweis 3250501 zu beachten
+
+  - log_id: src_hana_audit_log
+    Name: HANA DB Audit Log
+    required_fields: [...]
+    hints: die Aufzeichnung konkreter EVENT_IDs hängt von der Aktivierung und Konfiguration des HANA Audit Logs ab
+
+
+# Detection Strategy
+detections:
+  # (Selbst)zuweisung kritischer Rollen/Profile
+  - detection_id: 001
+    log_id_ref: src_abap_sal
+    selection:
+      EVENT_ID IN *...* AND 
+      Message_Text IN *...* AND
+      Message_Text IN *...* # optional; identifiziert nur Selbstzuweisungen 
+    release_dependencies: N/A
+
+  # Berechtigungsanpassungen über Tabellenmanipulation mittels SE16N/S416N
+  - detection_id: 002
+    log_id_ref: src_abap_sal
+    selection: 
+      EVENT_ID IN *FUF* AND
+      Message_Text IN (*AGR_*,*USR02*,*USR04*,*USR10*,*USR12*,*USRBF2*,*UST04*)
+    release_dependencies: S416N/SE16N changes only available in SAL for Basisrelease >7.52 (see notes 3140539, 3146567 and 3141656); in previous releases, S*16N header tables (*_CD_KEY) can be used
+    other_notes: weiterführende Informationen der exakten Änderungen sind über die Logsuche der S*16N Transaktionen verfügbar (S*16N>Absprung oder RKS*16N_DISPLAY_CHANGES)
+
+  # Berechtigungsanpassungen über Tabellenmanipulation mittels Debugger
+  - detection_id: 003
+    log_id_ref: src_abap_sal
+    selection: 
+      EVENT_ID IN *CUL* AND
+      Message_Text IN (*AGR_*,*USR02*,*USR04*,*USR10*,*USR12*,*USRBF2*,*UST04*)
+    release_dependencies: N/A
+    other_notes: N/A
+
+  # Berechtigungsanpassungen über SQL Center in ABAP
+  - detection_id: 004
+    log_id_ref: src_abap_sal
+    selection: 
+      EVENT_ID IN (*FUM*,*FUP*) AND 
+      Message_Text IN (*AGR_*,*USR02*,*USR04*,*USR10*,*USR12*,*USRBF2*,*UST04*)
+    release_dependencies: changes via SQL center only available in SAL for Basisrelease >7.57 SP03 (see notes 3331129 and 3319853); in previous releases the data is made available for successful SQL statements from the DBACOCKPIT Audit Log table
+    other_notes: sowohl erfolgreiche als auch fehlgeschlagene SQL statements werden protokolliert
+
+  # Berechtigungsanpassungen über HANA SQL
+  - detection_id: 005
+    log_id_ref: src_hana_audit_log
+    selection: 
+      ...
+    release_dependencies: N/A
+    other_notes: N/A
+
+  # (Selbst)zuweisung Referenzbenutzer
+  - detection_id: 006
+    log_id_ref: ...
+    selection:
+      ...
+    release_dependencies: N/A
+    other_notes: N/A
+
+
+# Übliche Fehlalarme (False Positives)
+common_false_positives:
+  - berechtigte Notfallbenutzer oder "Firefighter" (Privileged User Management), welchen gemäß interner Betriebsstandards kritische Standardprofile zugewiesen werden dürfen
+  - Entstörung von Fehlfunktionalitäten im Benutzer- oder Berechtigungskontext
+
+# Mögliche Angriffsszenarien (Korrelation SAP / non-SAP)
+
+
+# Mögliche Incident Response Schritte 
+response_playbook:
+  investigation:
+    - Prüfung von Änderungsbelegen; Bei Berechtigungsmanipulation auf Tabellenebene greifen Änderungen in der Regel nicht direkt, sondern erst nach Benutzerabgleich (PFCG_TIME_DEPENDENCY)
+    - Prüfung nachgelagerter Schritte nach Berechtigungszuweisung; auf Abweichungen in Zeitzonen zwischen Logquellen ist zu achten
+  remediation:
+    - ...
+  recovery:
+    - ...
+  
+  # Besonderheiten im Betriebsmodell "RISE":
+  RISE_special_cases:
+    - ... 
