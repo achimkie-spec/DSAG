@@ -47,9 +47,9 @@ Logquellen:
 detections:
   # (Selbst)zuweisung kritischer Rollen/Profile
   - detection_id: 001
-    log_id_ref: src_abap_sal
+    log_id_ref: src_abap_sal #see log_source_definition.yaml
     selection:
-      EVENT_ID IN *...* AND 
+      Message_ID IN *...* AND 
       Message_Text IN *...* AND
       Message_Text IN *...* # optional; identifiziert nur Selbstzuweisungen 
     release_dependencies: N/A
@@ -58,7 +58,7 @@ detections:
   - detection_id: 002
     log_id_ref: src_abap_sal
     selection: 
-      EVENT_ID IN *FUF* AND
+      Message_ID IN *FUF* AND
       Message_Text IN (*AGR_*,*USR02*,*USR04*,*USR10*,*USR12*,*USRBF2*,*UST04*)
     release_dependencies: S416N/SE16N changes only available in SAL for Basisrelease >7.52 (see notes 3140539, 3146567 and 3141656); in previous releases, S*16N header tables (*_CD_KEY) can be used
     other_notes: weiterführende Informationen der exakten Änderungen sind über die Logsuche der S*16N Transaktionen verfügbar (S*16N>Absprung oder RKS*16N_DISPLAY_CHANGES)
@@ -67,7 +67,7 @@ detections:
   - detection_id: 003
     log_id_ref: src_abap_sal
     selection: 
-      EVENT_ID IN *CUL* AND
+      Message_ID IN *CUL* AND
       Message_Text IN (*AGR_*,*USR02*,*USR04*,*USR10*,*USR12*,*USRBF2*,*UST04*)
     release_dependencies: N/A
     other_notes: N/A

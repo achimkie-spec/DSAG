@@ -1,0 +1,54 @@
+description: "Zentrale Definition und Harmonisierung für Security-relevanter SAP Logquellen Referenzdatei für Use Cases basierend auf OCSF"
+
+# ==============================================================================
+# 1. HARMONISIERTES ZIEL-SCHEMA (basierend auf Open Cyber Security Schema Framework (OCSF))
+# ==============================================================================
+# Zentrale Definition der harmonisierten Felder auf Basis des OCSF Schema.
+# Link: https://github.com/ocsf/
+OCSF_harmonized_fields:
+  actor.user:
+    ocsf_object_name: "actor"
+    ocsf_attribute: "user"
+    description: "Eindeutiger Account- oder Benutzername im Zielsystem"
+    category: "identity"
+
+  host.actor:
+    ocsf_object_name: "host"
+    ocsf_attribute: "actor"
+    type: "string"
+    description: "Name des Clients/Hosts, von dem die Aktion ausgeführt wurde"
+    category: "application"
+
+  # ...
+
+
+# ==============================================================================
+# 2. SAP-LOG-QUELLEN (Auflistung der wesentlichen Felder pro Logquelle, inklusive Mapping auf OCSF)
+# ==============================================================================
+log_sources:
+
+  # --- QUELLE 1: Security Audit Log ---
+  - source_name: "src_abap_sal"
+    description: "Sicherheitsrelevante Events der Applikationsschicht von SAP ABAP"
+    
+    fields:
+      - raw_field: "UNAME"
+        description: "Der SAP-User im Audit Log"
+        maps_to: "actor.user" # Referenz auf OCSF mapping
+
+      - raw_field: "TERMINAL"
+        description: "Terminalname des Benutzers"
+        maps_to: "host.actor"
+
+      - raw_field: "TCODE"
+        description: "Gestartete SAP-Transaktion"
+        maps_to: "..."
+
+  # --- QUELLE 2: HANA DB Audit Log ---
+  - source_name: "src_hana_audit_log"
+    description: "Protokollierung Aktivitäten auf der HANA Datenbankebene"
+    
+    fields:
+      - raw_field: "..."
+        description: "..."
+        maps_to: "..."
