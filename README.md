@@ -24,3 +24,8 @@ Das bedeutet, eine Tactic nach MITRE stellt begrifflich einen "Use Case" dar, w�
 ### Use Case Definition
 ...
 
+### Relevante Spezifika
+(z.B. Betriebsmodell; abhängige Logkonfiguration; Releaseabhängigkeit...)
+
+### Übliche False Positives und Skizzierung Incident Response
+...
